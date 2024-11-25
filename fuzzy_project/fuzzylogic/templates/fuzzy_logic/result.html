@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Результаты обработки</title>
+</head>
+<body>
+    <h1>Результаты обработки</h1>
+    
+    <h2>Матрица A1</h2>
+    <div>{{ A1|safe }}</div>
+    
+    <h2>Матрица A2</h2>
+    <div>{{ A2|safe }}</div>
+    
+    <h2>Матрица A3</h2>
+    <div>{{ A3|safe }}</div>
+    
+    <h2>Матрица B</h2>
+    <div>{{ B|safe }}</div>
+    
+    <h2>Правила</h2>
+    {{ rules|safe }}
+    
+    <h2>Данные для обработки</h2>
+    {{ given }}
+
+    <h2>Уровни истинности предпосылок правил:</h2>
+    {{ levels_of_truth }}
+
+    {% comment %} <h2>Имена</h2>
+    {{ names }} {% endcomment %}
+
+    <h2>Выходы правил:</h2>
+    {{ outputs }}
+
+    <h2>Агрегация выходов правил:</h2>
+    {{ aggregation }}
+
+    <h2>defuzzification:</h2>
+    {{ defuzzification }}
+
+
+    </ul>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Нечёткая система</title>
+</head>
+<body>
+    <h1>Нечёткая система</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label for="data_file">Выберите файл:</label>
+        <input type="file" name="data_file" id="data_file" required><br><br>
+
+        <label for="implication_method">Метод импликации:</label>
+        <select name="implication_method" id="implication_method">
+            <option value="Mamdani">Мамдани</option>
+            <option value="Larsen">Ларсен</option>
+        </select><br><br>
+
+        <label for="aggregation_method">Метод агрегации:</label>
+        <select name="aggregation_method" id="aggregation_method">
+            <option value="outputs">Агрегация выходов</option>
+            <option value="rules">Агрегация правил</option>
+        </select><br><br>
+
+        <button type="submit">Выполнить</button>
+    </form>
+</body>
+</html>

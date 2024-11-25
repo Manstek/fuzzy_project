@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Результаты</title>
+</head>
+<body>
+    <h1>Результаты расчёта</h1>
+    <h2>Матрица A</h2>
+    {{ A|safe }}
+
+    <h2>Матрица B</h2>
+    {{ B|safe }}
+
+    <h2>Правила</h2>
+    {{ rules|safe }}
+
+    <h2>Данные (Пусть)</h2>
+    <pre>{{ given }}</pre>
+
+    <h2>Агрегированный выход</h2>
+    <pre>{{ output }}</pre>
+
+    <h2>Дефаззифицированное значение</h2>
+    <pre>{{ defuzz_value }}</pre>
+
+    <a href="/">Назад</a>
+</body>
+</html>
