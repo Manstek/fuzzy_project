@@ -215,15 +215,12 @@ def execute_logic(request):
     if request.method == 'POST':
         uploaded_file = request.FILES.get('data_file')
         if uploaded_file:
-            # Сохранение файла во временную директорию
             with tempfile.NamedTemporaryFile(delete=False) as temp_file:
                 for chunk in uploaded_file.chunks():
                     temp_file.write(chunk)
                 temp_file_path = temp_file.name
 
-            # Передаем путь к временному файлу в process_file
             A, B, rules, given, name = process_file(temp_file_path)
-
             # Получение уровней истинности предпосылок
             levels_of_truth = get_levels_of_truth(A, B, rules, given, name)
             outputs = get_outputs(B, rules, name, levels_of_truth)
