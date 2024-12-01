@@ -7,5 +7,3 @@ urlpatterns = [
     path('one/', views.index, name='index'),
     path('many/', include('fuzzylogic.urls')),
 ]
-
-

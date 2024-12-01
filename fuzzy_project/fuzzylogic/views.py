@@ -1,8 +1,7 @@
 # views.py
 from django.shortcuts import render
-from django.http import HttpResponse
 import pandas as pd
-import numpy as np
+
 
 def process_file(filename):
     # Матрицы для хранения данных
@@ -16,12 +15,11 @@ def process_file(filename):
 
     with open(filename, 'r', encoding='utf-8') as file:
         lines = file.readlines()
-    
+
     current_set_name = None
     current_set_values = []
     current_set_length = 0
     set = 0
-    given_set = 0
     a1_name = ''
     a2_name = ''
     a3_name = ''
@@ -34,20 +32,24 @@ def process_file(filename):
         if not line:
             i += 1
             continue
-        
+
         elif line.startswith("Множество определения"):
             if current_set_name:
                 if set == 1:
-                    A1[current_set_name] = current_set_values + [0] * (current_set_length - len(current_set_values))
+                    A1[current_set_name] = current_set_values + [0] * (
+                        current_set_length - len(current_set_values))
                 elif set == 2:
-                    A2[current_set_name] = current_set_values + [0] * (current_set_length - len(current_set_values))
+                    A2[current_set_name] = current_set_values + [0] * (
+                        current_set_length - len(current_set_values))
                 elif set == 3:
-                    A3[current_set_name] = current_set_values + [0] * (current_set_length - len(current_set_values))
+                    A3[current_set_name] = current_set_values + [0] * (
+                        current_set_length - len(current_set_values))
                 elif set == 4:
-                    B[current_set_name] = current_set_values + [0] * (current_set_length - len(current_set_values))
+                    B[current_set_name] = current_set_values + [0] * (
+                        current_set_length - len(current_set_values))
 
             set += 1
-            
+
             # Начинаем обработку нового множества
             parts = line.split()
             current_set_name = parts[-1]
@@ -68,7 +70,7 @@ def process_file(filename):
             if current_set_length == 0:
                 current_set_length = len(values)
             current_set_values.extend(values)
-        
+
         elif line.startswith("Нечеткое множество"):
             # Считываем название нечеткого множества
             parts = line.split()
@@ -76,7 +78,8 @@ def process_file(filename):
             i += 1  # Переходим к следующей строке, содержащей значения
             if i < len(lines):
                 fuzzy_set_values = list(map(float, lines[i].strip().split()))
-                fuzzy_set_values.extend([0] * (current_set_length - len(fuzzy_set_values)))
+                fuzzy_set_values.extend([0] * (current_set_length - len(
+                    fuzzy_set_values)))
                 if set == 1:
                     A1[fuzzy_set_name] = fuzzy_set_values
                 elif set == 2:
@@ -89,10 +92,10 @@ def process_file(filename):
         elif line.startswith("Если"):
             # Обработка правила
             parts = line.split()
-            antecedent1 = parts[2] 
-            antecedent2 = parts[5]  
-            antecedent3 = parts[8] 
-            consequent = parts[-1]  
+            antecedent1 = parts[2]
+            antecedent2 = parts[5]
+            antecedent3 = parts[8]
+            consequent = parts[-1]
             rules.append((antecedent1, antecedent2, antecedent3, consequent))
 
         elif line.startswith("Пусть"):
@@ -109,13 +112,17 @@ def process_file(filename):
     # Обрабатываем последнее множество
     if current_set_name:
         if set == 1:
-            A1[current_set_name] = current_set_values + [0] * (current_set_length - len(current_set_values))
+            A1[current_set_name] = current_set_values + [0] * (
+                current_set_length - len(current_set_values))
         elif set == 2:
-            A2[current_set_name] = current_set_values + [0] * (current_set_length - len(current_set_values))
+            A2[current_set_name] = current_set_values + [0] * (
+                current_set_length - len(current_set_values))
         elif set == 3:
-            A3[current_set_name] = current_set_values + [0] * (current_set_length - len(current_set_values))
+            A3[current_set_name] = current_set_values + [0] * (
+                current_set_length - len(current_set_values))
         elif set == 4:
-            B[current_set_name] = current_set_values + [0] * (current_set_length - len(current_set_values))
+            B[current_set_name] = current_set_values + [0] * (
+                current_set_length - len(current_set_values))
 
     A1 = pd.DataFrame(A1)
     A2 = pd.DataFrame(A2)
@@ -145,6 +152,7 @@ def maxmin(a, b):
         row.append(min(a[i], b[i]))
     return max(row)
 
+
 def get_levels_of_truth(A, B, rules, given, name):
     levels_of_truth = []
     for i in range(len(rules[name[0]])):
@@ -160,6 +168,48 @@ def get_levels_of_truth(A, B, rules, given, name):
         levels_of_truth.append(level)
     return levels_of_truth
 
+
+def get_outputs(B, rules, name, levels_of_truth):
+    outputs = []
+    for r in range(len(rules[name[0]])):
+        output = []
+        for i in range(len(B[rules[name[0]][r]])):
+            output.append(min(B[rules[name[0]][r]][i], levels_of_truth[r]))
+        outputs.append(output)
+    return outputs
+
+
+def outputs_aggregation(outputs):
+    aggregation = []
+    for i in range(len(outputs[0])):
+        max_output = outputs[0][i]
+        for output in outputs:
+            max_output = max(max_output, output[i])
+        aggregation.append(max_output)
+    return aggregation
+
+
+def defuzzification(A, B, name, given, aggregation):
+    result = []
+    for j in range(len(name) - 1):
+        sum_1 = 0
+        sum_2 = 0
+        for i in range(len(given)):
+            sum_1 += given[j][i] * A[j+1][name[j+1]][i]
+            sum_2 += given[j][i]
+        mid = sum_1/sum_2
+        result.append(f"Четкое значение входа {name[j+1]}: {round(mid)}")
+
+    sum_1 = 0
+    sum_2 = 0
+    for i in range(len(aggregation)):
+        sum_1 += aggregation[i] * B[name[0]][i]
+        sum_2 += aggregation[i]
+    mid = sum_1/sum_2
+    result.append(f"Четкое значение выхода {name[0]}: {round(mid)}")
+    return result
+
+
 def execute_logic(request):
     filename = "bd2.txt"
     A, B, rules, given, name = process_file(filename)
@@ -167,9 +217,11 @@ def execute_logic(request):
     # Получение уровней истинности предпосылок
     levels_of_truth = get_levels_of_truth(A, B, rules, given, name)
     outputs = get_outputs(B, rules, name, levels_of_truth)
+    for i in range(len(outputs)):
+        for j in range(len(outputs[i])):
+            outputs[i][j] = float(outputs[i][j])
     aggregation = outputs_aggregation(outputs)
     defuz = defuzzification(A, B, name, given, aggregation)
-    print(type(rules))
 
     return render(request, 'fuzzy_logic/result.html', {
         'A1': A[1].to_html(),
@@ -178,10 +230,9 @@ def execute_logic(request):
         'B': B.to_html(),
         'rules': rules.to_html(classes='table table-bordered'),
         'given': given,
-        'levels_of_truth': levels_of_truth,
+        'levels_of_truth': [float(el) for el in levels_of_truth],
         'names': name,
-        # 'outputs': outputs,
-        # 'aggregation': aggregation,
-        # 'defuzzification': defuz,
-
+        'outputs': outputs,
+        'aggregation': aggregation,
+        'defuzzification': defuz,
     })

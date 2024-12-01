@@ -27,17 +27,20 @@
     <h2>Уровни истинности предпосылок правил:</h2>
     {{ levels_of_truth }}
 
-    {% comment %} <h2>Имена</h2>
-    {{ names }} {% endcomment %}
-
     <h2>Выходы правил:</h2>
-    {{ outputs }}
+        <ul>
+            {% for row in outputs %}
+                {{ row }}<br>
+            {% endfor %}
+        </ul>
 
     <h2>Агрегация выходов правил:</h2>
     {{ aggregation }}
 
-    <h2>defuzzification:</h2>
-    {{ defuzzification }}
+    <h2>Дефазификация:</h2>
+    {% for row in defuzzification %}
+        {{ row }}<br>
+    {% endfor %}
 
 
     </ul>
