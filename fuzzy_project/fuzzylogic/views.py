@@ -1,6 +1,7 @@
 # views.py
 from django.shortcuts import render
 import pandas as pd
+import tempfile
 
 
 def process_file(filename):
@@ -211,28 +212,39 @@ def defuzzification(A, B, name, given, aggregation):
 
 
 def execute_logic(request):
-    filename = "bd2.txt"
-    A, B, rules, given, name = process_file(filename)
+    if request.method == 'POST':
+        uploaded_file = request.FILES.get('data_file')
+        if uploaded_file:
+            # Сохранение файла во временную директорию
+            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                for chunk in uploaded_file.chunks():
+                    temp_file.write(chunk)
+                temp_file_path = temp_file.name
 
-    # Получение уровней истинности предпосылок
-    levels_of_truth = get_levels_of_truth(A, B, rules, given, name)
-    outputs = get_outputs(B, rules, name, levels_of_truth)
-    for i in range(len(outputs)):
-        for j in range(len(outputs[i])):
-            outputs[i][j] = float(outputs[i][j])
-    aggregation = outputs_aggregation(outputs)
-    defuz = defuzzification(A, B, name, given, aggregation)
+            # Передаем путь к временному файлу в process_file
+            A, B, rules, given, name = process_file(temp_file_path)
 
-    return render(request, 'fuzzy_logic/result.html', {
-        'A1': A[1].to_html(),
-        'A2': A[2].to_html(),
-        'A3': A[3].to_html(),
-        'B': B.to_html(),
-        'rules': rules.to_html(classes='table table-bordered'),
-        'given': given,
-        'levels_of_truth': [float(el) for el in levels_of_truth],
-        'names': name,
-        'outputs': outputs,
-        'aggregation': aggregation,
-        'defuzzification': defuz,
-    })
+            # Получение уровней истинности предпосылок
+            levels_of_truth = get_levels_of_truth(A, B, rules, given, name)
+            outputs = get_outputs(B, rules, name, levels_of_truth)
+            for i in range(len(outputs)):
+                for j in range(len(outputs[i])):
+                    outputs[i][j] = float(outputs[i][j])
+            aggregation = outputs_aggregation(outputs)
+            defuz = defuzzification(A, B, name, given, aggregation)
+
+            return render(request, 'fuzzy_logic/result.html', {
+                'A1': A[1].to_html(),
+                'A2': A[2].to_html(),
+                'A3': A[3].to_html(),
+                'B': B.to_html(),
+                'rules': rules.to_html(classes='table table-bordered'),
+                'given': given,
+                'levels_of_truth': [float(el) for el in levels_of_truth],
+                'names': name,
+                'outputs': outputs,
+                'aggregation': aggregation,
+                'defuzzification': defuz,
+            })
+
+    return render(request, 'fuzzy_logic/index.html')

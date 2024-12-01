@@ -1,8 +1,7 @@
 from django.shortcuts import render
-from django.http import JsonResponse
 import pandas as pd
 
-# Логика из вашего исходного скрипта
+
 def process_file(uploaded_file):
     A = {}
     B = {}
@@ -26,14 +25,16 @@ def process_file(uploaded_file):
         if not line:
             i += 1
             continue
-        
+
         elif line.startswith("Множество определения"):
             if current_set_name:
                 if A_set:
-                    A[current_set_name] = current_set_values + [0] * (current_set_length - len(current_set_values))
+                    A[current_set_name] = current_set_values + [0] * (
+                        current_set_length - len(current_set_values))
                 else:
-                    B[current_set_name] = current_set_values + [0] * (current_set_length - len(current_set_values))
-            
+                    B[current_set_name] = current_set_values + [0] * (
+                        current_set_length - len(current_set_values))
+
             A_set = not A_set
             parts = line.split()
             current_set_name = parts[-1]
@@ -49,19 +50,20 @@ def process_file(uploaded_file):
             if current_set_length == 0:
                 current_set_length = len(values)
             current_set_values.extend(values)
-        
+
         elif line.startswith("Нечеткое множество"):
             parts = line.split()
             fuzzy_set_name = parts[-1]
             i += 1
             if i < len(lines):
                 fuzzy_set_values = list(map(float, lines[i].strip().split()))
-                fuzzy_set_values.extend([0] * (current_set_length - len(fuzzy_set_values)))
+                fuzzy_set_values.extend([0] * (current_set_length - len(
+                    fuzzy_set_values)))
                 if A_set:
                     A[fuzzy_set_name] = fuzzy_set_values
                 else:
                     B[fuzzy_set_name] = fuzzy_set_values
-        
+
         elif line.startswith("Если"):
             parts = line.split()
             antecedent = parts[2]
@@ -78,7 +80,7 @@ def process_file(uploaded_file):
 
     if current_set_name:
         if A_set:
-            A[current_set_name] = current_set_values 
+            A[current_set_name] = current_set_values
         else:
             B[current_set_name] = current_set_values
 
@@ -96,7 +98,8 @@ def get_correspondences_Mamdani(A, B, rules):
         for i in range(len(A)):
             row = []
             for j in range(len(B)):
-                row.append(min(A[rules["Условие"][r]][i], B[rules["Следствие"][r]][j]))
+                row.append(min(A[rules["Условие"][r]][i],
+                               B[rules["Следствие"][r]][j]))
             correspondence.append(row)
         correspondences.append(correspondence)
     return correspondences
@@ -109,7 +112,8 @@ def get_correspondences_Larsen(A, B, rules):
         for i in range(len(A)):
             row = []
             for j in range(len(B)):
-                row.append(round(A[rules["Условие"][r]][i] * B[rules["Следствие"][r]][j], 2))
+                row.append(round(A[
+                    rules["Условие"][r]][i] * B[rules["Следствие"][r]][j], 2))
             correspondence.append(row)
         correspondences.append(correspondence)
     return correspondences
@@ -121,7 +125,7 @@ def outputs_aggregation(correspondences, rules, given):
         output = []
         for i in range(len(correspondence[0])):
             column = []
-            for j in range(len(given)):  
+            for j in range(len(given)):
                 column.append(min(given[j], correspondence[j][i]))
             output.append(max(column))
         outputs.append(output)
@@ -141,12 +145,13 @@ def rules_aggregation(correspondences, given):
     for correspondence in correspondences:
         for i in range(len(aggregation)):
             for j in range(len(aggregation[0])):
-                aggregation[i][j] = max(aggregation[i][j], correspondence[i][j])
+                aggregation[i][j] = max(
+                    aggregation[i][j], correspondence[i][j])
 
     output = []
     for i in range(len(aggregation[0])):
         column = []
-        for j in range(len(given)):       
+        for j in range(len(given)):
             column.append(min(given[j], aggregation[j][i]))
         output.append(max(column))
 
@@ -193,20 +198,3 @@ def index(request):
             return render(request, 'fuzzy_system/result.html', context)
 
     return render(request, 'fuzzy_system/index.html')
-
-
-# def index(request):
-#     if request.method == 'POST' and request.FILES.get('file'):
-#         uploaded_file = request.FILES['file']
-#         A, B, rules, given, a_name, b_name = process_file(uploaded_file)
-#         # Передайте данные в шаблон
-#         return render(request, 'index.html', {
-#             'A': A.to_html(),
-#             'B': B.to_html(),
-#             'rules': rules.to_html(),
-#             'given': given,
-#             'a_name': a_name,
-#             'b_name': b_name
-#         })
-
-#     return render(request, 'fuzzy_system/index.html')
